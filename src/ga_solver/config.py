@@ -15,6 +15,7 @@ class GAConfig:
     tolerance: float = 1e-8
     patience: int | None = 50
     seed: int | None = None
+    find_all_roots: bool = True
 
     def __post_init__(self) -> None:
         if self.lower_bound >= self.upper_bound:
@@ -33,7 +34,7 @@ class GAConfig:
 
 @dataclass
 class SolverConfig:
-    n_subintervals: int = 20  // chia 20 khoảng 
+    n_subintervals: int = 20  # chia 20 khoảng 
     root_tolerance: float = 1e-6
     exclusion_radius: float = 1e-4
     min_width: float = 1e-3

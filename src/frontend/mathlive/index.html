@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MathLive GeoGebra Style Equations</title>
+  
+  <!-- Tải MathLive từ CDN (có fallback sang jsdelivr) -->
+  <script src="https://unpkg.com/mathlive" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/mathlive';"></script>
+
+  <style>
+    :root {
+      --st-bg: #0e1117;
+      --st-secondary-bg: #262730;
+      --st-text: #ffffff;
+      --st-primary: #7b62fe;
+      --st-border: rgba(255, 255, 255, 0.2);
+      --st-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+      /* Cấu hình theme MathLive */
+      --keyboard-background: var(--st-secondary-bg);
+      --keycap-background: var(--st-bg);
+      --keycap-text: var(--st-text);
+      --keycap-background-active: var(--st-primary);
+      --primary: var(--st-primary);
+      --ui-font-family: var(--st-font);
+      --keyboard-toolbar-text: var(--st-text);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      font-family: var(--st-font);
+      color: var(--st-text);
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .wrapper {
+      padding: 4px 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+
+    /* Thanh tiêu đề & nút tiện ích */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 2px;
+    }
+
+    .badge-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--st-text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .st-btn {
+      background-color: var(--st-secondary-bg);
+      color: var(--st-text);
+      border: 1px solid var(--st-border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.12s ease;
+    }
+
+    .st-btn:hover {
+      border-color: var(--st-primary);
+      color: var(--st-primary);
+    }
+
+    .st-btn.active {
+      background-color: var(--st-primary);
+      color: #ffffff;
+      border-color: var(--st-primary);
+    }
+
+    .st-btn.add-btn {
+      background-color: transparent;
+      border: 1.5px dashed var(--st-border);
+      width: 100%;
+      justify-content: center;
+      padding: 8px 14px;
+      font-size: 0.88rem;
+      border-radius: 8px;
+      margin-top: 2px;
+    }
+
+    .st-btn.add-btn:hover {
+      border-color: var(--st-primary);
+      background-color: rgba(123, 98, 254, 0.08);
+      color: var(--st-primary);
+    }
+
+    /* Danh sách các dòng phương trình kiểu GeoGebra / Desmos */
+    .equations-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .equation-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      transition: transform 0.1s ease;
+    }
+
+    /* Số thứ tự dòng 1, 2, 3... */
+    .row-num {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background-color: var(--st-secondary-bg);
+      color: var(--st-text);
+      font-size: 0.82rem;
+      font-weight: 600;
+      flex-shrink: 0;
+      border: 1px solid var(--st-border);
+      transition: all 0.15s ease;
+    }
+
+    .equation-row:focus-within .row-num {
+      background-color: var(--st-primary);
+      color: #ffffff;
+      border-color: var(--st-primary);
+    }
+
+    /* Khung nhập MathLive trên từng dòng */
+    math-field {
+      flex: 1;
+      font-size: 1.35rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--st-border);
+      background-color: var(--st-bg);
+      color: var(--st-text);
+      min-height: 48px;
+      cursor: text;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    math-field:focus-within {
+      outline: none;
+      border-color: var(--st-primary);
+      box-shadow: 0 0 0 1.5px var(--st-primary);
+    }
+
+    /* Nút xóa từng dòng */
+    .btn-remove {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--st-text);
+      opacity: 0.6;
+      border-radius: 6px;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .btn-remove:hover {
+      opacity: 1;
+      background-color: rgba(255, 75, 75, 0.15);
+      color: #ff4b4b;
+      border-color: rgba(255, 75, 75, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper" id="root-wrapper">
+    <div class="toolbar">
+      <span class="badge-title">
+        📐 Hệ phương trình (GeoGebra Style)
+      </span>
+      <div class="btn-group">
+        <button class="st-btn active" id="btn-toggle-kb">⌨️ Đóng Bàn Phím</button>
+        <button class="st-btn" id="btn-clear-all">🗑 Làm Mới</button>
+      </div>
+    </div>
+
+    <!-- Danh sách các dòng phương trình -->
+    <div class="equations-container" id="eq-container">
+      <!-- Dòng phương trình sẽ được tạo tự động bằng JavaScript -->
+    </div>
+
+    <!-- Nút thêm phương trình -->
+    <button class="st-btn add-btn" id="btn-add-eq">
+      ➕ Thêm phương trình vào hệ
+    </button>
+  </div>
+
+  <script>
+    const wrapper = document.getElementById("root-wrapper");
+    const container = document.getElementById("eq-container");
+    const btnAddEq = document.getElementById("btn-add-eq");
+    const btnToggleKb = document.getElementById("btn-toggle-kb");
+    const btnClearAll = document.getElementById("btn-clear-all");
+
+    let currentEquations = ["x + 9 = 5"];
+    let activeField = null;
+
+    // Gửi danh sách phương trình (mảng các chuỗi) lên Streamlit
+    function sendEquationsToStreamlit() {
+      const fields = container.querySelectorAll("math-field");
+      const eqs = Array.from(fields).map(f => f.value.trim()).filter(v => v !== "");
+      currentEquations = eqs.length > 0 ? eqs : [""];
+
+      window.parent.postMessage({
+        isStreamlitMessage: true,
+        type: "streamlit:setComponentValue",
+        value: currentEquations
+      }, "*");
+    }
+
+    // Tự động tính toán chiều cao iframe
+    function notifyFrameHeight() {
+      const contentHeight = wrapper.offsetHeight || 120;
+      let kbHeight = 0;
+      if (window.mathVirtualKeyboard && window.mathVirtualKeyboard.visible) {
+        const rect = window.mathVirtualKeyboard.boundingRect;
+        kbHeight = (rect && rect.height > 0) ? rect.height : 290;
+      }
+      const totalHeight = contentHeight + kbHeight + 20;
+
+      window.parent.postMessage({
+        isStreamlitMessage: true,
+        type: "streamlit:setFrameHeight",
+        height: Math.max(totalHeight, 120)
+      }, "*");
+    }
+
+    function openKeyboard() {
+      if (window.mathVirtualKeyboard) {
+        window.mathVirtualKeyboard.show();
+        updateButtonState();
+        setTimeout(notifyFrameHeight, 80);
+      }
+    }
+
+    function hideKeyboard() {
+      if (window.mathVirtualKeyboard) {
+        window.mathVirtualKeyboard.hide();
+        updateButtonState();
+        setTimeout(notifyFrameHeight, 80);
+      }
+    }
+
+    function updateButtonState() {
+      const isVisible = window.mathVirtualKeyboard && window.mathVirtualKeyboard.visible;
+      if (isVisible) {
+        btnToggleKb.classList.add("active");
+        btnToggleKb.innerHTML = "⌨️ Đóng Bàn Phím";
+      } else {
+        btnToggleKb.classList.remove("active");
+        btnToggleKb.innerHTML = "⌨️ Mở Bàn Phím Ảo";
+      }
+    }
+
+    // Tạo một dòng phương trình mới (Row)
+    function createEquationRow(initialValue = "") {
+      const row = document.createElement("div");
+      row.className = "equation-row";
+
+      const numBadge = document.createElement("div");
+      numBadge.className = "row-num";
+
+      const mf = document.createElement("math-field");
+      mf.setAttribute("math-virtual-keyboard-policy", "sandboxed");
+      mf.value = initialValue;
+
+      const removeBtn = document.createElement("button");
+      removeBtn.className = "btn-remove";
+      removeBtn.innerHTML = "🗑";
+      removeBtn.title = "Xóa phương trình này";
+
+      row.appendChild(numBadge);
+      row.appendChild(mf);
+      row.appendChild(removeBtn);
+
+      // Sự kiện gõ / tương tác
+      mf.addEventListener("focus", () => {
+        activeField = mf;
+        openKeyboard();
+      });
+      mf.addEventListener("click", () => {
+        activeField = mf;
+        openKeyboard();
+      });
+      mf.addEventListener("pointerdown", () => {
+        activeField = mf;
+        openKeyboard();
+      });
+
+      mf.addEventListener("input", () => {
+        sendEquationsToStreamlit();
+        notifyFrameHeight();
+      });
+
+      // Nhấn Enter trên bàn phím -> TỰ ĐỘNG THÊM DÒNG MỚI (CHUẨN GEOGEBRA)
+      mf.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addNewRowAndFocus();
+        }
+      });
+
+      // Xóa dòng
+      removeBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const allRows = container.querySelectorAll(".equation-row");
+        if (allRows.length > 1) {
+          row.remove();
+          updateRowNumbers();
+          sendEquationsToStreamlit();
+          notifyFrameHeight();
+        } else {
+          mf.setValue("");
+          sendEquationsToStreamlit();
+          notifyFrameHeight();
+        }
+      });
+
+      container.appendChild(row);
+      updateRowNumbers();
+      return mf;
+    }
+
+    // Cập nhật số thứ tự 1, 2, 3...
+    function updateRowNumbers() {
+      const rows = container.querySelectorAll(".equation-row");
+      rows.forEach((r, idx) => {
+        const badge = r.querySelector(".row-num");
+        if (badge) badge.innerText = idx + 1;
+        const removeBtn = r.querySelector(".btn-remove");
+        if (removeBtn) {
+          removeBtn.style.visibility = rows.length > 1 ? "visible" : "hidden";
+        }
+      });
+    }
+
+    function addNewRowAndFocus(initialVal = "") {
+      const newMf = createEquationRow(initialVal);
+      setTimeout(() => {
+        newMf.focus();
+        activeField = newMf;
+        openKeyboard();
+        notifyFrameHeight();
+      }, 50);
+      sendEquationsToStreamlit();
+    }
+
+    // Nút Thêm phương trình
+    btnAddEq.addEventListener("click", (e) => {
+      e.preventDefault();
+      addNewRowAndFocus();
+    });
+
+    // Nút Toggle bàn phím
+    btnToggleKb.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (window.mathVirtualKeyboard && window.mathVirtualKeyboard.visible) {
+        hideKeyboard();
+      } else {
+        openKeyboard();
+      }
+    });
+
+    // Nút Làm mới tất cả
+    btnClearAll.addEventListener("click", (e) => {
+      e.preventDefault();
+      container.innerHTML = "";
+      createEquationRow("");
+      sendEquationsToStreamlit();
+      notifyFrameHeight();
+    });
+
+    // Đồng bộ Theme từ Streamlit (Dark Mode / Light Mode)
+    function applyStreamlitTheme(theme) {
+      if (!theme) return;
+      const root = document.documentElement;
+
+      if (theme.backgroundColor) {
+        root.style.setProperty("--st-bg", theme.backgroundColor);
+        root.style.setProperty("--keycap-background", theme.backgroundColor);
+      }
+      if (theme.secondaryBackgroundColor) {
+        root.style.setProperty("--st-secondary-bg", theme.secondaryBackgroundColor);
+        root.style.setProperty("--keyboard-background", theme.secondaryBackgroundColor);
+      }
+      if (theme.textColor) {
+        root.style.setProperty("--st-text", theme.textColor);
+        root.style.setProperty("--keycap-text", theme.textColor);
+        root.style.setProperty("--keyboard-toolbar-text", theme.textColor);
+      }
+      if (theme.primaryColor) {
+        root.style.setProperty("--st-primary", theme.primaryColor);
+        root.style.setProperty("--primary", theme.primaryColor);
+        root.style.setProperty("--keycap-background-active", theme.primaryColor);
+      }
+      if (theme.font) {
+        root.style.setProperty("--st-font", theme.font);
+        root.style.setProperty("--ui-font-family", theme.font);
+      }
+
+      const isDark = theme.base === "dark" || 
+        (theme.backgroundColor && (theme.backgroundColor.startsWith("#0") || theme.backgroundColor.startsWith("#1")));
+      root.style.setProperty("--st-border", isDark ? "rgba(255, 255, 255, 0.16)" : "rgba(49, 51, 63, 0.2)");
+    }
+
+    // Nhận dữ liệu khởi tạo từ Streamlit
+    window.addEventListener("message", (event) => {
+      if (!event.data) return;
+
+      if (event.data.type === "streamlit:render") {
+        const args = event.data.args;
+        if (args && args.equations !== undefined && Array.isArray(args.equations)) {
+          // Chỉ cập nhật nếu danh sách từ ngoài khác hiện tại và không đang focus
+          if (!document.activeElement || document.activeElement.tagName !== "MATH-FIELD") {
+            const newEqs = args.equations.filter(e => e.trim() !== "");
+            if (newEqs.length > 0 && JSON.stringify(newEqs) !== JSON.stringify(currentEquations)) {
+              container.innerHTML = "";
+              newEqs.forEach(eq => createEquationRow(eq));
+              currentEquations = newEqs;
+            }
+          }
+        }
+
+        if (event.data.theme) {
+          applyStreamlitTheme(event.data.theme);
+        }
+
+        notifyFrameHeight();
+      }
+    });
+
+    // Báo Streamlit sẵn sàng
+    window.parent.postMessage({
+      isStreamlitMessage: true,
+      type: "streamlit:componentReady",
+      apiVersion: 1
+    }, "*");
+
+    // Khởi tạo ban đầu
+    customElements.whenDefined('math-field').then(() => {
+      if (container.children.length === 0) {
+        createEquationRow("x + 9 = 5");
+      }
+
+      if (window.mathVirtualKeyboard) {
+        window.mathVirtualKeyboard.addEventListener("geometrychange", () => {
+          updateButtonState();
+          notifyFrameHeight();
+        });
+
+        setTimeout(() => {
+          openKeyboard();
+        }, 300);
+      }
+
+      sendEquationsToStreamlit();
+      notifyFrameHeight();
+    });
+
+    window.addEventListener("load", () => {
+      setTimeout(openKeyboard, 400);
+    });
+  </script>
+</body>
+</html>
