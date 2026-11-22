@@ -29,8 +29,6 @@ st.set_page_config(page_title="GA Giải Phương Trình", page_icon="📐", lay
 # Khai báo component MathLive.io
 _CANDIDATE_PATHS = [
     os.path.join(ROOT_DIR, "src", "ga_solver", "frontend"),
-    os.path.join(ROOT_DIR, "src", "frontend", "mathlive"),
-    os.path.join(ROOT_DIR, "src", "frontend"),
 ]
 _MATHLIVE_PATH = next((p for p in _CANDIDATE_PATHS if os.path.isfile(os.path.join(p, "index.html"))), _CANDIDATE_PATHS[0])
 try:
